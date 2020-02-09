@@ -7,6 +7,7 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using OrderProcessingPipelineWithAzureFuncs.Models;
 
 namespace OrderProcessingPipelineWithAzureFuncs
 {
@@ -14,19 +15,19 @@ namespace OrderProcessingPipelineWithAzureFuncs
     {
         [FunctionName("OnPaymentReceived")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequest req, ILogger log)
+            [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequest req, ILogger log,
+            [Queue("orders", Connection = "AzureWebJobsStorage")] IAsyncCollector<Order> orderQueue)
         {
-            log.LogInformation("C# HTTP trigger function processed a request.");
-
-            string name = req.Query["name"];
+            log.LogInformation("Received a payment");
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            dynamic data = JsonConvert.DeserializeObject(requestBody);
-            name = name ?? data?.name;
+            Order data = JsonConvert.DeserializeObject<Order>(requestBody);
 
-            return name != null
-                ? (ActionResult)new OkObjectResult($"Hello, {name}")
-                : new BadRequestObjectResult("Please pass a name on the query string or in the request body");
+            // write to queue
+            await orderQueue.AddAsync(data);
+
+            return new OkObjectResult("Thank you for your purchse");
+
         }
     }
 }

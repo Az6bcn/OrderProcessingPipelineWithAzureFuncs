@@ -16,6 +16,7 @@ namespace OrderProcessingPipelineWithAzureFuncs
         [FunctionName("OnPaymentReceived")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequest req, ILogger log,
+            // queue output binding i.e writes to the queue
             [Queue("orders", Connection = "AzureWebJobsStorage")] IAsyncCollector<Order> orderQueue)
         {
             log.LogInformation("Received a payment");

@@ -11,6 +11,7 @@ namespace OrderProcessingPipelineWithAzureFuncs
     {
         [FunctionName("GenerateLicenseFile")]
         public static void Run([QueueTrigger("orders", Connection = "AzureWebJobsStorage")] Order order, ILogger log,
+            // blob output binding i.e writes to the blob container
             [Blob("licenses/{rand-guid}.lic")] TextWriter outputBlob)
         {
             // when message is added to the orders queue this function is triggered and generates a license file for the added item in the blob storage.
